@@ -85,6 +85,12 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.gson)
 
+    // SystemUI
+    implementation(libs.system.ui)
+
+    // Extended Icons
+    implementation(libs.extended.icons)
+
 }
 
 kapt {

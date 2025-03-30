@@ -27,6 +27,12 @@ okHttpVersion = "4.9.0"
 datastorePreferences = "1.1.1"
 gsonVersion = "2.12.1"
 
+# SystemUI
+systemUiVersion = "0.27.0"
+
+# Extended Icons
+extendedIconsVersion = "1.5.4"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -68,6 +74,12 @@ okHttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 # Data Store / Gson
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
+
+# SystemUI
+system-ui = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "systemUiVersion" }
+
+# Extended Icon
+extended-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "extendedIconsVersion"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
