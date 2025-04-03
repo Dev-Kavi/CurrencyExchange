@@ -4,45 +4,74 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.dev.carl.currencyexchange.ui.converter.BalanceDisplay
+import com.dev.carl.currencyexchange.ui.converter.ExchangeDisplay
+import com.dev.carl.currencyexchange.ui.converter.ExchangeViewModel
+import com.dev.carl.currencyexchange.ui.theme.AppBarBlue
 import com.dev.carl.currencyexchange.ui.theme.CurrencyExchangeTheme
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             CurrencyExchangeTheme {
-                AppBarColor(color = MaterialTheme.colorScheme.background)
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-
+                val viewModel: ExchangeViewModel by viewModels()
+                val state = viewModel.state
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = AppBarBlue,
+                                titleContentColor = Color.White
+                            ),
+                            title = {}
+                        )
+                    }
+                ) { innerPadding ->
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize()
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        BalanceDisplay(state = state)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        ExchangeDisplay(
+                            state = state,
+                            onFromCurrencyChanged = { currency ->
+                                viewModel.updateFromCurrency(currency)
+                            },
+                            onToCurrencyChanged = { currency ->
+                                viewModel.updateToCurrency(currency)
+                            },
+                            onConvert = { amount ->
+                                viewModel.convertCurrency(amount)
+                            }, onDialogDismissed = {
+                                viewModel.dismissConversionDialog()
+                            },
+                            modifier = Modifier
+                        )
+                    }
                 }
-
             }
-        }
-    }
-
-    @Composable
-    private fun AppBarColor(color: Color) {
-        val systemUiController = rememberSystemUiController()
-        SideEffect {
-            systemUiController.setSystemBarsColor(
-                color = color
-            )
         }
     }
 }
