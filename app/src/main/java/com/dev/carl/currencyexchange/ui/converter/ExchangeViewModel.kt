@@ -10,6 +10,11 @@ import com.dev.carl.currencyexchange.domain.models.Rates
 import com.dev.carl.currencyexchange.domain.repository.ExchangeRepository
 import com.dev.carl.currencyexchange.domain.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +27,22 @@ class ExchangeViewModel @Inject constructor(
         private set
 
     init {
-        loadExchangeRateData()
+        periodicReFetch()
+    }
+
+    private fun periodicReFetch() {
+        flow {
+            while (true) {
+                emit(Unit)
+                delay(5000)
+            }
+        }
+            .onEach { loadExchangeRateData() }
+            .catch { e ->
+                e.printStackTrace()
+                state = state.copy(error = "Failed to fetch exchange rates: ${e.message}")
+            }
+            .launchIn(viewModelScope)
     }
 
     fun updateFromCurrency(currency: String) {
@@ -39,21 +59,25 @@ class ExchangeViewModel @Inject constructor(
         val rates = state.ratesData?.rates ?: return
 
         val fromBalance = state.balances.find { it.currency == fromCurrency }?.amount ?: 0.0
-        if (fromBalance < amount) {
-            state = state.copy(error = "Insufficient balance in $fromCurrency")
+
+        val isFreeExchange = state.exchangeCount < 5
+        val commissionRate = if (isFreeExchange) 0.0 else 0.007
+        val commission = amount * commissionRate
+        val totalRequired = amount + commission
+
+        if (fromBalance < totalRequired) {
+            state = state.copy(error = "Insufficient balance in $fromCurrency to cover the amount and commission.")
             return
         }
 
         val rate = getConversionRate(rates, fromCurrency, toCurrency)
 
-        val isFreeExchange = state.exchangeCount < 5
-        val commissionRate = if (isFreeExchange) 0.0 else 0.0007 // 0.07%
-        val commission = amount * commissionRate
-        val netAmount = amount - commission
-        val netConvertedAmount = netAmount * rate
+        val netConvertedAmount = amount * rate
 
         val updatedBalances = state.balances.map { it.copy() }.toMutableList().apply {
-            find { it.currency == fromCurrency }?.let { it.amount -= amount }
+            find { it.currency == fromCurrency }?.let {
+                it.amount -= totalRequired // Deduct both amount and commission from the balance
+            }
             val toBalance = find { it.currency == toCurrency }
             if (toBalance != null) {
                 toBalance.amount += netConvertedAmount
@@ -63,10 +87,10 @@ class ExchangeViewModel @Inject constructor(
         }
 
         val conversionDetails = buildString {
-            append("You have converted ${"%.2f".format(netAmount)} $fromCurrency ")
+            append("You have converted ${"%.2f".format(amount)} $fromCurrency ")
             append("to ${"%.2f".format(netConvertedAmount)} $toCurrency.\n")
             if (!isFreeExchange) {
-                append("Commission Fee - ${"%.2f".format(commission)} $fromCurrency.")
+                append("Commission Fee: ${"%.2f".format(commission)} $fromCurrency.")
             }
         }
 
