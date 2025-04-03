@@ -12,8 +12,8 @@ class ExchangeRepositoryImp @Inject constructor(
 ) : ExchangeRepository {
     override suspend fun getExchangeRates(): Resource<ExchangeRates> {
         return try {
-            val response = api.getExchangeRates().toExchangeRates()
-            Resource.Success(response)
+            val response = api.getExchangeRates()
+            Resource.Success(response.toExchangeRates())
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
         }
