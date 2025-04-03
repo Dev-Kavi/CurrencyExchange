@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -100,7 +101,12 @@ fun SellDisplay(
             ),
             textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End)
         )
-
+        var searchQuery by remember { mutableStateOf("") }
+        val filteredCurrencies = if (searchQuery.isEmpty()) {
+            currencies
+        } else {
+            currencies.filter { it.contains(searchQuery, ignoreCase = true) }
+        }
         Box {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -124,7 +130,13 @@ fun SellDisplay(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                currencies.forEach { currency ->
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search currency...") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                filteredCurrencies.forEach { currency ->
                     DropdownMenuItem(
                         onClick = {
                             onCurrencySelected(currency)

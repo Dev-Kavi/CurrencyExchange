@@ -17,6 +17,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -79,6 +80,13 @@ fun ReceiveDisplay(
             textAlign = TextAlign.End
         )
 
+        var searchQuery by remember { mutableStateOf("") }
+        val filteredCurrencies = if (searchQuery.isEmpty()) {
+            currencies
+        } else {
+            currencies.filter { it.contains(searchQuery, ignoreCase = true) }
+        }
+
         Box(modifier = Modifier.padding(start = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -102,7 +110,13 @@ fun ReceiveDisplay(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                currencies.forEach { currency ->
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search currency...") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                filteredCurrencies.forEach { currency ->
                     DropdownMenuItem(
                         onClick = {
                             onCurrencySelected(currency)
